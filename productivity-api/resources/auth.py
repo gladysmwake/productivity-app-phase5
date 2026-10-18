@@ -1,3 +1,4 @@
+"""Authentication controllers: Signup, Login, Logout, and Session Verification."""
 from flask import session
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -9,6 +10,12 @@ from utils import current_user, load_json, login_required
 
 
 class Signup(Resource):
+    """User registration endpoint.
+    
+    Accepts `username` and `password`, validates length and format, hashes the password
+    with bcrypt, and establishes a new authenticated session.
+    """
+
     def post(self):
         data, error = load_json(SignupSchema())
         if error:
@@ -26,27 +33,41 @@ class Signup(Resource):
             db.session.rollback()
             return {"errors": ["Username is already taken"]}, 422
 
+        # Session Fixation Defense: Always reset the session before binding a new identity
         session.clear()
         session["user_id"] = user.id
         return user_schema.dump(user), 201
 
 
 class Login(Resource):
+    """User authentication endpoint.
+    
+    Verifies credentials and issues a signed session cookie.
+    """
+
     def post(self):
         data, error = load_json(LoginSchema())
         if error:
             return error
 
+        # Normalize lookup to lowercase to preserve case-insensitive authentication
         user = User.query.filter_by(username=data["username"].strip().lower()).first()
         if user and user.authenticate(data["password"]):
+            # Clear existing session data before writing user_id
             session.clear()
             session["user_id"] = user.id
             return user_schema.dump(user), 200
 
+        # Account Enumeration Defense: Return identical error message whether username or password was wrong
         return {"errors": ["Invalid username or password"]}, 401
 
 
 class Logout(Resource):
+    """Session termination endpoint.
+    
+    Invalidates the active session and returns HTTP 204 No Content.
+    """
+
     @login_required
     def delete(self):
         session.clear()
@@ -54,6 +75,11 @@ class Logout(Resource):
 
 
 class CheckSession(Resource):
+    """Session persistence endpoint (mapped to /check_session and /me).
+    
+    Allows client applications to restore login state on browser refresh.
+    """
+
     def get(self):
         user = current_user()
         if user:

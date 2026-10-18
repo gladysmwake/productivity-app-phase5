@@ -1,18 +1,23 @@
+"""Marshmallow schemas for request validation and response serialization."""
 from marshmallow import EXCLUDE, Schema, ValidationError, fields, validate
 
 
 def not_blank(value):
+    """Reject strings that are empty or consist solely of whitespace characters."""
     if not value.strip():
         raise ValidationError("Cannot be blank")
 
 
 class UserSchema(Schema):
+    """Public user serializer. Never serializes password hashes or internal secrets."""
     id = fields.Int(dump_only=True)
     username = fields.Str(dump_only=True)
 
 
 class SignupSchema(Schema):
+    """Validation schema for user registration payloads."""
     class Meta:
+        # Prevent mass-assignment vulnerabilities by discarding unknown keys
         unknown = EXCLUDE
 
     username = fields.Str(required=True, validate=[validate.Length(min=3, max=50), not_blank])
@@ -20,6 +25,7 @@ class SignupSchema(Schema):
 
 
 class LoginSchema(Schema):
+    """Validation schema for user login credentials."""
     class Meta:
         unknown = EXCLUDE
 
@@ -28,9 +34,11 @@ class LoginSchema(Schema):
 
 
 class NoteSchema(Schema):
+    """Validation and serialization schema for Note resources."""
     class Meta:
         unknown = EXCLUDE
 
+    # dump_only fields can only be sent in responses, never written by clients
     id = fields.Int(dump_only=True)
     title = fields.Str(required=True, validate=[validate.Length(max=100), not_blank])
     content = fields.Str(required=True, validate=not_blank)
