@@ -1,3 +1,4 @@
+"""Note controllers: Paginated list, creation, retrieval, updates, and deletion."""
 from flask import session
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -9,8 +10,15 @@ from utils import get_owned_note, load_json, login_required, pagination_args
 
 
 class NoteList(Resource):
+    """Collection endpoint for the user's notes (/notes)."""
+
     @login_required
     def get(self):
+        """List the authenticated user's notes with server-side pagination.
+        
+        Filters strictly by `user_id=session['user_id']` at the SQL level, ensuring
+        users can never query or receive another user's records.
+        """
         page, per_page = pagination_args()
         pagination = (
             Note.query.filter_by(user_id=session["user_id"])
@@ -27,6 +35,11 @@ class NoteList(Resource):
 
     @login_required
     def post(self):
+        """Create a new note belonging to the authenticated user.
+        
+        The user_id is sourced directly from session state, preventing clients
+        from creating notes on behalf of other users.
+        """
         data, error = load_json(NoteSchema())
         if error:
             return error
@@ -45,8 +58,11 @@ class NoteList(Resource):
 
 
 class NoteDetail(Resource):
+    """Item endpoint for individual note operations (/notes/<int:note_id>)."""
+
     @login_required
     def get(self, note_id):
+        """Retrieve a single note, verifying ownership."""
         note, error = get_owned_note(note_id)
         if error:
             return error
@@ -54,6 +70,10 @@ class NoteDetail(Resource):
 
     @login_required
     def patch(self, note_id):
+        """Partially update a note's title and/or content.
+        
+        Uses `partial=True` to allow either title or content to be updated independently.
+        """
         note, error = get_owned_note(note_id)
         if error:
             return error
@@ -76,6 +96,7 @@ class NoteDetail(Resource):
 
     @login_required
     def delete(self, note_id):
+        """Permanently delete a note owned by the authenticated user."""
         note, error = get_owned_note(note_id)
         if error:
             return error
