@@ -13,6 +13,7 @@ class TestAuth:
         assert res.get_json()["username"] == "echo"
         assert "password" not in str(res.get_json())
         assert client.get("/check_session").status_code == 200
+        assert client.get("/me").status_code == 200
 
     def test_signup_rejects_duplicate_and_short_password(self, client):
         signup(client)
