@@ -92,7 +92,7 @@ class NoteDetail(Resource):
             return {"errors": [str(e)]}, 422
         except IntegrityError:
             db.session.rollback()
-            return {"errors": [str(e)]}, 422
+            return {"errors": ["Failed to update note"]}, 422
 
     @login_required
     def delete(self, note_id):
