@@ -1,3 +1,4 @@
+"""Resource package — imports all Flask-RESTful Resource classes and wires them to URL routes."""
 from config import api
 from resources.auth import CheckSession, Login, Logout, Signup
 from resources.notes import NoteDetail, NoteList
