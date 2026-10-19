@@ -81,6 +81,27 @@ python app.py
 
 The API is available at http://127.0.0.1:5555
 
+---
+
+## Running the Frontend Client (`client-with-sessions`)
+
+The project includes the official session-based React authentication client provided for this lab.
+
+```bash
+# 1. Navigate to the client directory
+cd client-with-sessions
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the React development server
+npm start
+```
+
+The frontend serves on **http://localhost:4000** and automatically proxies requests to the Flask backend running on **http://localhost:5555** (`"proxy": "http://localhost:5555"` in `package.json`), ensuring seamless cookie exchange without CORS configuration.
+
+---
+
 ### Environment Variables
 
 | Variable | Default | Description |

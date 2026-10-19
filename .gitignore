@@ -31,3 +31,13 @@ htmlcov/
 .vscode/
 .idea/
 *.swp
+
+# Node & Frontend Client
+node_modules/
+build/
+.pnp
+.pnp.js
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
