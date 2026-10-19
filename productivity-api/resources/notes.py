@@ -35,11 +35,7 @@ class NoteList(Resource):
 
     @login_required
     def post(self):
-        """Create a new note belonging to the authenticated user.
-        
-        The user_id is sourced directly from session state, preventing clients
-        from creating notes on behalf of other users.
-        """
+        """Create a new note. user_id comes from the session, not the request body."""
         data, error = load_json(NoteSchema())
         if error:
             return error

@@ -7,7 +7,7 @@ from marshmallow import ValidationError
 from config import db
 from models import Note, User
 
-# Pagination defaults: prevent client-side denial-of-service through unbounded queries.
+# cap per_page so a client can't request 10,000 rows at once
 DEFAULT_PER_PAGE = 5
 MAX_PER_PAGE = 50
 
@@ -37,12 +37,10 @@ def current_user():
 
 
 def load_json(schema):
-    """Safely parse and validate the incoming request JSON payload against a Marshmallow schema.
-    
-    Returns:
-        tuple: (validated_data, None) on success, or (None, (error_dict, status_code)) on failure.
-        - 400 Bad Request: If payload is missing or not a JSON object.
-        - 422 Unprocessable Entity: If field validation rules fail.
+    """Parse and validate the incoming JSON body against a Marshmallow schema.
+
+    Returns (data, None) on success or (None, (errors, status_code)) on failure.
+    400 when the body isn't JSON, 422 when validation rules fail.
     """
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
@@ -55,12 +53,11 @@ def load_json(schema):
 
 
 def get_owned_note(note_id):
-    """Retrieve a note and enforce row-level access control.
-    
-    Returns:
-        tuple: (note, None) if found and owned by session user.
-        - 404 Not Found: If note does not exist in the database.
-        - 403 Forbidden: If note exists but belongs to a different user.
+    """Fetch a note by ID and confirm the session user owns it.
+
+    Returns (note, None) if everything checks out.
+    Returns (None, error_response) with 404 if the note doesn't exist,
+    or 403 if it belongs to someone else.
     """
     note = db.session.get(Note, note_id)
     if note is None:
@@ -71,10 +68,7 @@ def get_owned_note(note_id):
 
 
 def pagination_args():
-    """Extract, parse, and clamp pagination query parameters (?page=1&per_page=5).
-    
-    Clamps `page >= 1` and `1 <= per_page <= MAX_PER_PAGE (50)` to ensure database query safety.
-    """
+    """Pull ?page and ?per_page from the query string and clamp them to safe ranges."""
     page = max(request.args.get("page", 1, type=int), 1)
     per_page = request.args.get("per_page", DEFAULT_PER_PAGE, type=int)
     return page, min(max(per_page, 1), MAX_PER_PAGE)

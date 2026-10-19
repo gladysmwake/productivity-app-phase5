@@ -33,7 +33,7 @@ class Signup(Resource):
             db.session.rollback()
             return {"errors": ["Username is already taken"]}, 422
 
-        # Session Fixation Defense: Always reset the session before binding a new identity
+        # wipe any leftover session data before writing the new user in
         session.clear()
         session["user_id"] = user.id
         return user_schema.dump(user), 201
@@ -50,15 +50,15 @@ class Login(Resource):
         if error:
             return error
 
-        # Normalize lookup to lowercase to preserve case-insensitive authentication
+        # usernames are stored lowercase, so normalize before querying
         user = User.query.filter_by(username=data["username"].strip().lower()).first()
         if user and user.authenticate(data["password"]):
-            # Clear existing session data before writing user_id
+            # clear the old session first so we start fresh
             session.clear()
             session["user_id"] = user.id
             return user_schema.dump(user), 200
 
-        # Account Enumeration Defense: Return identical error message whether username or password was wrong
+        # keep the message vague so an attacker can't tell which field was wrong
         return {"errors": ["Invalid username or password"]}, 401
 
 
