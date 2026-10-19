@@ -23,6 +23,24 @@ class TestAuth:
         assert signup(client, "u" * 51, "secret123").status_code == 422
         assert client.post("/signup", json={"password": "secret123"}).status_code == 422
 
+    def test_signup_password_confirmation(self, client):
+        # Mismatched confirmation must fail with 422 Unprocessable Entity
+        mismatch = client.post("/signup", json={
+            "username": "echo",
+            "password": "secret123",
+            "password_confirmation": "different"
+        })
+        assert mismatch.status_code == 422
+        assert "Passwords do not match" in mismatch.get_json()["errors"][0]
+
+        # Matching confirmation must succeed with 201 Created
+        match = client.post("/signup", json={
+            "username": "echo",
+            "password": "secret123",
+            "password_confirmation": "secret123"
+        })
+        assert match.status_code == 201
+
     def test_usernames_are_case_insensitive(self, client):
         signup(client, "Echo")
         assert signup(client, "echo").status_code == 422
