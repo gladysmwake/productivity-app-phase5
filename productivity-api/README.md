@@ -1,4 +1,4 @@
-﻿# Productivity Notes API
+# Productivity Notes API
 
 A secure, session-based Flask REST API that lets users sign up, log in, and
 manage their own private notes. Every resource endpoint is protected so that a
@@ -103,10 +103,10 @@ pytest -v
 
 | Method | Route | Body | Success | Error |
 |---|---|---|---|---|
-| POST | /signup | { username, password } | 201 user object | 422 validation error |
+| POST | /signup | { username, password, password_confirmation? } | 201 user object | 422 validation error |
 | POST | /login | { username, password } | 200 user object | 401 bad credentials |
 | DELETE | /logout | - | 204 | 401 not logged in |
-| GET | /check_session | - | 200 user object | 401 not logged in |
+| GET | /check_session, /me | - | 200 user object | 401 not logged in |
 
 ### Notes (login required - owner only)
 

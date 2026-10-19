@@ -1,5 +1,5 @@
 """Marshmallow schemas for request validation and response serialization."""
-from marshmallow import EXCLUDE, Schema, ValidationError, fields, validate
+from marshmallow import EXCLUDE, Schema, ValidationError, fields, validate, validates_schema
 
 
 def not_blank(value):
@@ -22,6 +22,14 @@ class SignupSchema(Schema):
 
     username = fields.Str(required=True, validate=[validate.Length(min=3, max=50), not_blank])
     password = fields.Str(required=True, validate=[validate.Length(min=6, max=128), not_blank])
+    # The client-with-sessions frontend sends password_confirmation; optional for direct API callers
+    password_confirmation = fields.Str()
+
+    @validates_schema
+    def check_confirmation(self, data, **kwargs):
+        confirmation = data.get("password_confirmation")
+        if confirmation is not None and confirmation != data.get("password"):
+            raise ValidationError("Passwords do not match", "password_confirmation")
 
 
 class LoginSchema(Schema):
